@@ -90,6 +90,15 @@ if expr "$1" : "apache" 1>/dev/null || [ "$1" = "php-fpm" ] || [ "${NEXTCLOUD_UP
         exit 1
     fi
 
+    # If no installed version detected but files are present in output directory, warn user and exit script instead of reaching 'rsync --delete' (might hurt severely in case of incorrect data directory mapping)
+    if [ "$installed_version" == "0.0.0.0" ] && [ "$(ls /var/www/html | wc -l)" -ne 0 ]; then
+	echo "Files detected in target directory but unable to detect a previous Nextcloud install. Stopping deployment to prevent data wipe. Are you sure that you mapped your volumes correctly ?"
+	echo "Directory content is : "
+	ls -1
+	exit 1	
+    fi
+	
+
     if version_greater "$image_version" "$installed_version"; then
         echo "Initializing nextcloud $image_version ..."
         if [ "$installed_version" != "0.0.0.0" ]; then
